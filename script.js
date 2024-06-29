@@ -8,11 +8,39 @@ const text = document.getElementById('text');
 const amount = document.getElementById('amount');
 const category = document.getElementById('category');
 const type = document.getElementById('type');
+const date = document.getElementById('date');
 const ctx = document.getElementById('expenseChart').getContext('2d');
+const budgetForm = document.getElementById('budget-form');
+const budgetCategory = document.getElementById('budget-category');
+const budgetAmount = document.getElementById('budget-amount');
+const exportCsv = document.getElementById('export-csv');
+const monthlySummary = document.getElementById('monthly-summary');
+const categoryForm = document.getElementById('category-form');
+const newCategory = document.getElementById('new-category');
+
+// Initialize Flatpickr date picker
+flatpickr(date, {
+  dateFormat: "Y-m-d",
+  defaultDate: "today"
+});
 
 // Get transactions from local storage or initialize empty array
 const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
 let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
+
+// Get categories and budgets from local storage or initialize with defaults
+let categories = JSON.parse(localStorage.getItem('categories')) || ['Food', 'Transport', 'Entertainment', 'Utilities', 'Other'];
+let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
+
+// Populate category dropdowns
+function populateCategories() {
+  category.innerHTML = '';
+  budgetCategory.innerHTML = '';
+  categories.forEach(cat => {
+    category.innerHTML += `<option value="${cat}">${cat}</option>`;
+    budgetCategory.innerHTML += `<option value="${cat}">${cat}</option>`;
+  });
+}
 
 // Add transaction
 function addTransaction(e) {
@@ -26,7 +54,8 @@ function addTransaction(e) {
       text: text.value,
       amount: type.value === 'expense' ? -parseFloat(amount.value) : parseFloat(amount.value),
       category: category.value,
-      type: type.value
+      type: type.value,
+      date: date.value
     };
 
     transactions.push(transaction);
@@ -35,11 +64,11 @@ function addTransaction(e) {
     updateValues();
     updateLocalStorage();
     updateChart();
+    updateMonthlySummary();
 
     text.value = '';
     amount.value = '';
-    category.value = 'food';
-    type.value = 'expense';
+    date.value = new Date().toISOString().split('T')[0];
   }
 }
 
@@ -57,7 +86,7 @@ function addTransactionDOM(transaction) {
 
   item.innerHTML = `
     ${transaction.text} <span>${sign}$${Math.abs(transaction.amount).toFixed(2)}</span>
-    <small>${transaction.category}</small>
+    <small>${transaction.category} | ${transaction.date}</small>
     <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
   `;
 
@@ -89,9 +118,11 @@ function removeTransaction(id) {
   init();
 }
 
-// Update local storage transactions
+// Update local storage
 function updateLocalStorage() {
   localStorage.setItem('transactions', JSON.stringify(transactions));
+  localStorage.setItem('categories', JSON.stringify(categories));
+  localStorage.setItem('budgets', JSON.stringify(budgets));
 }
 
 // Initialize chart
@@ -101,10 +132,13 @@ function initChart() {
   expenseChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Food', 'Transport', 'Entertainment', 'Utilities', 'Other'],
+      labels: categories,
       datasets: [{
-        data: [0, 0, 0, 0, 0],
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+        data: categories.map(cat => 0),
+        backgroundColor: [
+          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+          '#FF9F40', '#FF6384', '#4BC0C0', '#FFCD56', '#36A2EB'
+        ]
       }]
     },
     options: {
@@ -119,13 +153,8 @@ function initChart() {
 
 // Update chart
 function updateChart() {
-  const categoryTotals = {
-    food: 0,
-    transport: 0,
-    entertainment: 0,
-    utilities: 0,
-    other: 0
-  };
+  const categoryTotals = {};
+  categories.forEach(cat => categoryTotals[cat] = 0);
 
   transactions.forEach(transaction => {
     if (transaction.amount < 0) {
@@ -137,16 +166,107 @@ function updateChart() {
   expenseChart.update();
 }
 
+// Set budget
+function setBudget(e) {
+  e.preventDefault();
+  const category = budgetCategory.value;
+  const amount = parseFloat(budgetAmount.value);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Please enter a valid budget amount');
+    return;
+  }
+
+  budgets[category] = amount;
+  updateLocalStorage();
+  updateMonthlySummary();
+  budgetAmount.value = '';
+}
+
+// Update monthly summary
+function updateMonthlySummary() {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  const monthlyExpenses = {};
+  categories.forEach(cat => monthlyExpenses[cat] = 0);
+
+  transactions.forEach(transaction => {
+    const transactionDate = new Date(transaction.date);
+    if (transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && transaction.amount < 0) {
+      monthlyExpenses[transaction.category] += Math.abs(transaction.amount);
+    }
+  });
+
+  let summaryHTML = '<h4>Monthly Summary</h4>';
+  categories.forEach(cat => {
+    const spent = monthlyExpenses[cat];
+    const budget = budgets[cat] || 0;
+    const remaining = budget - spent;
+    const color = remaining >= 0 ? 'green' : 'red';
+    
+    summaryHTML += `
+      <p>${cat}: $${spent.toFixed(2)} / $${budget.toFixed(2)} 
+      <span style="color: ${color};">(${remaining >= 0 ? '+' : ''}$${remaining.toFixed(2)})</span></p>
+    `;
+  });
+
+  monthlySummary.innerHTML = summaryHTML;
+}
+
+// Export to CSV
+function exportToCSV() {
+  let csv = 'Date,Description,Amount,Category,Type\n';
+  
+  transactions.forEach(transaction => {
+    csv += `${transaction.date},${transaction.text},${transaction.amount},${transaction.category},${transaction.type}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "transactions.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
+
+// Add new category
+function addCategory(e) {
+  e.preventDefault();
+  const newCategoryName = newCategory.value.trim();
+
+  if (newCategoryName && !categories.includes(newCategoryName)) {
+    categories.push(newCategoryName);
+    updateLocalStorage();
+    populateCategories();
+    newCategory.value = '';
+    updateChart();
+  } else {
+    alert('Please enter a valid and unique category name');
+  }
+}
+
 // Init app
 function init() {
   list.innerHTML = '';
   transactions.forEach(addTransactionDOM);
   updateValues();
+  populateCategories();
   initChart();
   updateChart();
+  updateMonthlySummary();
 }
 
 init();
 
 // Event listeners
 form.addEventListener('submit', addTransaction);
+budgetForm.addEventListener('submit', setBudget);
+exportCsv.addEventListener('click', exportToCSV);
+categoryForm.addEventListener('submit', addCategory);

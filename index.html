@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Finance Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 <body>
     <div class="container">
@@ -46,13 +48,7 @@
             </div>
             <div class="form-control">
                 <label for="category">Category</label>
-                <select id="category">
-                    <option value="food">Food</option>
-                    <option value="transport">Transport</option>
-                    <option value="entertainment">Entertainment</option>
-                    <option value="utilities">Utilities</option>
-                    <option value="other">Other</option>
-                </select>
+                <select id="category"></select>
             </div>
             <div class="form-control">
                 <label for="type">Type</label>
@@ -61,7 +57,39 @@
                     <option value="income">Income</option>
                 </select>
             </div>
+            <div class="form-control">
+                <label for="date">Date</label>
+                <input type="text" id="date" placeholder="Select date...">
+            </div>
             <button class="btn">Add transaction</button>
+        </form>
+
+        <h3>Budget Settings</h3>
+        <form id="budget-form">
+            <div class="form-control">
+                <label for="budget-category">Category</label>
+                <select id="budget-category"></select>
+            </div>
+            <div class="form-control">
+                <label for="budget-amount">Monthly Budget</label>
+                <input type="number" id="budget-amount" placeholder="Enter budget amount..." step="0.01">
+            </div>
+            <button class="btn">Set Budget</button>
+        </form>
+
+        <h3>Reports</h3>
+        <div class="reports">
+            <button id="export-csv" class="btn">Export to CSV</button>
+            <div id="monthly-summary"></div>
+        </div>
+
+        <h3>Manage Categories</h3>
+        <form id="category-form">
+            <div class="form-control">
+                <label for="new-category">New Category</label>
+                <input type="text" id="new-category" placeholder="Enter new category name...">
+            </div>
+            <button class="btn">Add Category</button>
         </form>
     </div>
 
