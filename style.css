@@ -21,12 +21,13 @@ body {
 
 .container {
   margin: 30px auto;
-  width: 350px;
+  width: 450px;
 }
 
 h1 {
   letter-spacing: 1px;
   margin: 0;
+  color: #2e75cc;
 }
 
 h3 {
@@ -78,7 +79,8 @@ label {
 }
 
 input[type='text'],
-input[type='number'] {
+input[type='number'],
+select {
   border: 1px solid #dedede;
   border-radius: 2px;
   display: block;
@@ -89,7 +91,7 @@ input[type='number'] {
 
 .btn {
   cursor: pointer;
-  background-color: #9c88ff;
+  background-color: #2e75cc;
   box-shadow: var(--box-shadow);
   color: #fff;
   border: 0;
@@ -98,6 +100,10 @@ input[type='number'] {
   margin: 10px 0 30px;
   padding: 10px;
   width: 100%;
+}
+
+.btn:hover {
+  background-color: #2c5aa0;
 }
 
 .btn:focus,
@@ -148,4 +154,9 @@ input[type='number'] {
 
 .list li:hover .delete-btn {
   opacity: 1;
+}
+
+.chart-container {
+  width: 100%;
+  margin-top: 20px;
 }

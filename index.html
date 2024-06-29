@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Finance Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -26,6 +27,10 @@
             </div>
         </div>
 
+        <div class="chart-container">
+            <canvas id="expenseChart"></canvas>
+        </div>
+
         <h3>History</h3>
         <ul id="list" class="list"></ul>
 
@@ -33,11 +38,28 @@
         <form id="form">
             <div class="form-control">
                 <label for="text">Description</label>
-                <input type="text" id="text" placeholder="Enter Transaction Descrpition...">
+                <input type="text" id="text" placeholder="Enter description...">
             </div>
             <div class="form-control">
-                <label for="amount">Amount <br>(negative - expense, positive - income)</label>
-                <input type="number" id="amount" placeholder="Enter amount...">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" placeholder="Enter amount..." step="0.01">
+            </div>
+            <div class="form-control">
+                <label for="category">Category</label>
+                <select id="category">
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-control">
+                <label for="type">Type</label>
+                <select id="type">
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                </select>
             </div>
             <button class="btn">Add transaction</button>
         </form>
