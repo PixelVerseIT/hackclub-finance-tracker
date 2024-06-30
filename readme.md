@@ -1,4 +1,4 @@
-#Finance Tracker HTML CSS JS
+# Finance Tracker HTML CSS JS
 By Hayden Kong
 
 
