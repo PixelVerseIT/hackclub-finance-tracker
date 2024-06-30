@@ -17,6 +17,8 @@ const exportCsv = document.getElementById('export-csv');
 const monthlySummary = document.getElementById('monthly-summary');
 const categoryForm = document.getElementById('category-form');
 const newCategory = document.getElementById('new-category');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const searchInput = document.getElementById('searchInput');
 
 // Initialize Flatpickr date picker
 flatpickr(date, {
@@ -65,6 +67,7 @@ function addTransaction(e) {
     updateLocalStorage();
     updateChart();
     updateMonthlySummary();
+    createIncomeExpenseChart();
 
     text.value = '';
     amount.value = '';
@@ -252,6 +255,68 @@ function addCategory(e) {
   }
 }
 
+// Create Income vs Expense Chart
+function createIncomeExpenseChart() {
+  const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+  const monthlyData = {};
+
+  transactions.forEach(transaction => {
+    const date = new Date(transaction.date);
+    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+    
+    if (!monthlyData[monthYear]) {
+      monthlyData[monthYear] = { income: 0, expense: 0 };
+    }
+    
+    if (transaction.amount > 0) {
+      monthlyData[monthYear].income += transaction.amount;
+    } else {
+      monthlyData[monthYear].expense += Math.abs(transaction.amount);
+    }
+  });
+
+  const labels = Object.keys(monthlyData);
+  const incomeData = labels.map(key => monthlyData[key].income);
+  const expenseData = labels.map(key => monthlyData[key].expense);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Income',
+          data: incomeData,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Expense',
+          data: expenseData,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'Monthly Income vs Expense'
+        }
+      }
+    }
+  });
+}
+
 // Init app
 function init() {
   list.innerHTML = '';
@@ -261,6 +326,7 @@ function init() {
   initChart();
   updateChart();
   updateMonthlySummary();
+  createIncomeExpenseChart();
 }
 
 init();
@@ -270,3 +336,34 @@ form.addEventListener('submit', addTransaction);
 budgetForm.addEventListener('submit', setBudget);
 exportCsv.addEventListener('click', exportToCSV);
 categoryForm.addEventListener('submit', addCategory);
+
+// Dark mode toggle
+darkModeToggle.addEventListener('change', () => {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', darkModeToggle.checked);
+});
+
+// Check for saved dark mode preference
+const savedDarkMode = localStorage.getItem('darkMode');
+if (savedDarkMode === 'true') {
+  darkModeToggle.checked = true;
+  document.body.classList.add('dark-mode');
+}
+
+// Search functionality
+searchInput.addEventListener('input', () => {
+  const searchTerm = searchInput.value.toLowerCase();
+  const filteredTransactions = transactions.filter(transaction => 
+    transaction.text.toLowerCase().includes(searchTerm) ||
+    transaction.category.toLowerCase().includes(searchTerm)
+  );
+  
+  updateDOM(filteredTransactions);
+});
+
+// Update DOM with filtered transactions
+function updateDOM(transactionsToDisplay = transactions) {
+  list.innerHTML = '';
+  transactionsToDisplay.forEach(addTransactionDOM);
+  updateValues();
+}

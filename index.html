@@ -13,6 +13,14 @@
     <div class="container">
         <h1>Personal Finance Tracker</h1>
         
+        <div class="dark-mode-toggle">
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider round"></span>
+            </label>
+            <span>Dark Mode</span>
+        </div>
+
         <div class="balance">
             <h2>Your Balance</h2>
             <h3 id="balance">$0.00</h3>
@@ -33,7 +41,14 @@
             <canvas id="expenseChart"></canvas>
         </div>
 
+        <div class="chart-container">
+            <canvas id="incomeExpenseChart"></canvas>
+        </div>
+
         <h3>History</h3>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search transactions...">
+        </div>
         <ul id="list" class="list"></ul>
 
         <h3>Add new transaction</h3>
